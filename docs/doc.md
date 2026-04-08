@@ -1,8 +1,3 @@
-Applied curriculum for building LLM-backed features: APIs, structured outputs, RAG, tools, agents, memory, and evaluation. Follow in order — later modules build on earlier ones.
-
-[View on GitHub](https://github.com/yuvrxj-afk/ai-engineering-lab)
-
----
 
 ## Prerequisites
 
@@ -139,27 +134,22 @@ Then wire everything into one path: query rewriting → retrieval → agent loop
 
 ## Study Path
 
-Each phase draws from the best parts of the most focused course for that topic.
+No single course covers the full curriculum. This sequences the best parts of each.
 
-```
-Phase 1 — Foundations (Modules 1–3)
-  Karpathy Zero to Hero          Videos 1–4 (tokenization through attention)
-                                 Skip training optimization — optional if focused on building
-  Anthropic Prompt Engineering   All 9 chapters — best resource for Modules 2–3
+**Phase 1 — Foundations** (Modules 1–3)
+[Karpathy Neural Networks: Zero to Hero](https://karpathy.ai/zero-to-hero.html) — videos 1–4 only; optional if you're focused on building, not understanding models from scratch
+[Anthropic Prompt Engineering](https://github.com/anthropics/prompt-eng-interactive-tutorial) — all 9 chapters; the best single resource for Modules 2–3
 
-Phase 2 — Retrieval (Modules 4–5)
-  DeepLearning.AI Vector DBs     Full course — covers Module 4
-  DeepLearning.AI Advanced RAG   Full course — focus on chunking and eval patterns
-                                 Skip LlamaIndex-specific abstractions
+**Phase 2 — Retrieval** (Modules 4–5)
+[DeepLearning.AI Vector Databases](https://www.deeplearning.ai/short-courses/vector-databases-embeddings-applications/) — full course, covers Module 4
+[DeepLearning.AI Advanced RAG](https://www.deeplearning.ai/short-courses/building-evaluating-advanced-rag/) — full course; focus on chunking and eval patterns, skip LlamaIndex abstractions
 
-Phase 3 — Systems (Modules 6–9)
-  AI Agents in LangGraph         Full course — covers tool calling, agents, and memory together
-                                 Skip the standalone memory course (heavy overlap)
-  MCP with Anthropic             Full course — do after the agents course
+**Phase 3 — Systems** (Modules 6–9)
+[AI Agents in LangGraph](https://www.deeplearning.ai/short-courses/ai-agents-in-langgraph/) — full course; covers tool calling, agents, and memory together — skip the standalone memory course, heavy overlap
+[MCP with Anthropic](https://www.deeplearning.ai/short-courses/mcp-build-rich-context-ai-apps-with-anthropic/) — full course; do this after the agents course
 
-Phase 4 — Evaluation (Module 10)
-  Intro to LangSmith             Full course — pair with RAGAS docs for scoring
-```
+**Phase 4 — Evaluation** (Module 10)
+[Intro to LangSmith](https://www.deeplearning.ai/short-courses/intro-to-langsmith/) — full course; pair with RAGAS docs for scoring patterns
 
 **Certification:** [Anthropic Claude Academy](https://academy.anthropic.com/)
 
@@ -176,37 +166,19 @@ Build a multi-turn agent that answers questions about a document corpus, pulls i
 
 ### System
 
-```
-User question
-  │
-  ├─ Query rewriting      Restate to improve retrieval recall
-  │
-  ├─ Retrieval            Embed → search → rerank → return top-k
-  │                       Index at least 20–30 documents
-  │                       Return "I don't know" if confidence is below threshold
-  │
-  ├─ Agent loop           Max 5 steps. Tools:
-  │                         web_search(query)
-  │                         calculator(expression)
-  │                         summarise_doc(url)
-  │                       Truncate tool output > 500 tokens before injecting
-  │                       Cite which tool produced which context
-  │
-  ├─ Memory               Retrieve 3 most relevant prior exchanges for the session
-  │                       Inject above chunks, below system prompt
-  │                       Persist after responding
-  │
-  ├─ Critic               A second model call before returning:
-  │                       Does every citation exist in the retrieved context?
-  │                       Does the confidence level match the evidence?
-  │                       Revise or flag — don't return unverified claims
-  │
-  ├─ Structured output    Validate against:
-  │                         { answer, citations[], confidence, follow_up_questions[] }
-  │                       Retry once on schema failure
-  │
-  └─ Response to user
-```
+1. **Query rewriting** — restate the question to improve retrieval recall before searching
+
+2. **Retrieval** — embed → search corpus → rerank → return top-k chunks. Index at least 20–30 documents. Return "I don't know" explicitly if retrieval confidence is below threshold — don't pass weak context to the model.
+
+3. **Agent loop** — max 5 steps. Available tools: `web_search(query)`, `calculator(expression)`, `summarise_doc(url)`. Truncate tool output above 500 tokens before injecting. Cite which tool produced which context.
+
+4. **Memory** — retrieve the 3 most relevant prior exchanges for the session. Inject above retrieved chunks, below the system prompt. Persist the new exchange after responding.
+
+5. **Critic** — a second model call before returning: does every citation exist in the retrieved context? Does the confidence level match the evidence? Revise or flag low-confidence answers — don't return unverified claims.
+
+6. **Structured output** — validate every response against `{ answer, citations[], confidence, follow_up_questions[] }`. Retry once on schema failure.
+
+7. **Response to user**
 
 ### Evaluation
 
