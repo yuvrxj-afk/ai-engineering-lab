@@ -221,5 +221,3 @@ Real systems and frameworks worth studying once the capstone is done.
 | [Anthropic Agent Patterns](https://docs.anthropic.com/en/docs/build-with-claude/agents) | Orchestrator–worker, parallelisation, routing — no framework lock-in |
 
 ---
-
-*Maintained by [yuvrxj-afk](https://github.com/yuvrxj-afk).*
