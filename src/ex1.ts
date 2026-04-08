@@ -22,7 +22,7 @@ if (!anthropicApiKey) {
 
 const client = new Anthropic({
     apiKey: anthropicApiKey,
-    // baseURL: "https://api.anthropic.com",
+    baseURL: "https://api.anthropic.com",
 }
 );
 
@@ -66,10 +66,10 @@ async function analyzeTx(rawTx: string, attempt = 1): Promise<TxAnalysis> {
     const modelCandidates = [
         preferredModel,
         MODELS.fast,
-        MODELS.balanced,
-        MODELS.powerful,
-        "claude-sonnet-4-20250514",
-        "claude-3-haiku-20240307",
+        // MODELS.balanced,
+        // MODELS.powerful,
+        // "claude-sonnet-4-20250514",
+        // "claude-3-haiku-20240307",
     ];
     const uniqueModels = [...new Set(modelCandidates.filter(Boolean))];
 
@@ -81,7 +81,7 @@ async function analyzeTx(rawTx: string, attempt = 1): Promise<TxAnalysis> {
                 model,
                 stream: false,
                 max_tokens: 512,
-                temperature: 0, // deterministic for structured extraction
+                temperature: 1, // deterministic for structured extraction
                 tools: [
                     {
                         name: "test_tx_and_submit_analysis",

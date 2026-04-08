@@ -1,186 +1,208 @@
-# AI engineering lab
+# AI Engineering Lab
 
-Applied curriculum for building LLM-backed features: APIs and prompts, structured outputs, semantic retrieval and RAG, tools and MCP, agents with guardrails, memory, evaluation, and a single integrated system. Follow in order—later modules assume earlier ones.
+Applied curriculum for building LLM-backed features: APIs, structured outputs, RAG, tools, agents, memory, and evaluation. Follow in order — later modules build on earlier ones.
+
+[View on GitHub](https://github.com/yuvrxj-afk/ai-engineering-lab)
 
 ---
 
 ## Prerequisites
 
-- Comfortable reading and writing in **Python** or **TypeScript** — pick one and stay consistent throughout
-- Familiarity with REST APIs and `async`/`await`
-- Basic command-line usage (running scripts, installing packages)
+- Python or TypeScript — pick one and stay consistent
+- Comfortable with REST APIs and `async`/`await`
 - No prior ML or LLM experience required
 
 ## Setup
 
-1. **API access** — Obtain a key from [OpenAI](https://platform.openai.com/api-keys) or [Anthropic](https://console.anthropic.com/settings/keys). Either works for most modules; differences are called out in references.
-2. **Environment** — Store keys in a `.env` file and load them via `dotenv` (Python: `python-dotenv`, TypeScript: `dotenv`). Never hard-code credentials.
-3. **Runtime** — Python 3.10+ or Node 18+.
-4. **Package manager** — `pip` / `venv` for Python; `npm` or `pnpm` for TypeScript.
-5. **Smoke test** — After setup, make one API call that prints the model's response. If that works, the environment is ready.
-
-> **Note on library names:** Examples throughout this doc name specific libraries (Zod, Pydantic, pgvector, Pinecone) to give a concrete target. The concepts apply to any equivalent tool — substitute freely for your stack.
+- Get an API key from [OpenAI](https://platform.openai.com/api-keys) or [Anthropic](https://console.anthropic.com/settings/keys)
+- Store it in `.env`, load with `dotenv` — never hard-code credentials
+- Python 3.10+ or Node 18+
+- Smoke test: one API call that prints a response
 
 ---
 
 ## Part I — Foundations
 
-### Model basics (tokens and inference)
+### 1. Model Basics
 
-**Objective:** Reason about cost, limits, and sampling behavior.
+Understand tokens, inference, and sampling. Call the API with factual, creative, and instruction prompts. Sweep `temperature` from 0 to 1 and compare outputs — you should be able to predict what changes.
 
-- **Concepts:** input vs output tokens, inference, `temperature`, `max_tokens`
-- **Practice:** Integrate OpenAI or Anthropic. Run three prompt types (factual, creative, instruction). Sweep temperature from 0 to 1 and compare outputs.
-- **Success criteria:** Predictable effect of temperature; truncation addressed via `max_tokens`.
-
-**References:** [OpenAI docs](https://platform.openai.com/docs) · [Anthropic docs](https://docs.anthropic.com) · [The Illustrated GPT-2](https://jalammar.github.io/illustrated-gpt2/) (Jay Alammar — visual walk-through of how tokens flow through a transformer) · [Tiktokenizer](https://tiktokenizer.vercel.app) (interactive token counter)
+[OpenAI docs](https://platform.openai.com/docs) · [Anthropic docs](https://docs.anthropic.com) · [The Illustrated GPT-2](https://jalammar.github.io/illustrated-gpt2/) · [Tiktokenizer](https://tiktokenizer.vercel.app/)
 
 ---
 
-### Prompting
+### 2. Prompting
 
-**Objective:** Steer model behavior with clear instructions.
+Write prompts that reliably steer the model. Take unstructured text and produce a structured summary — first with vague instructions, then explicit ones. Move the same instructions from user turn to system prompt and observe the difference.
 
-- **Concepts:** system vs user prompts; zero-shot and few-shot prompting; explicit instructions; role framing
-- **Practice:** From unstructured text, produce a structured summary. Repeat with vague, semi-structured, and explicit prompts; compare results. Then move the same instructions from the user turn into the system prompt and observe the difference.
-- **Success criteria:** Stronger prompts yield more consistent structure and fewer misses. System-prompt instructions are more reliably followed than equivalent user-turn instructions.
-
-**References:** [OpenAI prompt engineering](https://platform.openai.com/docs/guides/prompt-engineering) · [Anthropic prompt engineering](https://docs.anthropic.com/en/docs/build-with-claude/prompt-engineering/overview) · [DAIR.AI Prompt Engineering Guide](https://github.com/dair-ai/Prompt-Engineering-Guide) (comprehensive, model-agnostic, community-maintained)
+[OpenAI prompt engineering](https://platform.openai.com/docs/guides/prompt-engineering) · [Anthropic prompt engineering](https://docs.anthropic.com/en/docs/build-with-claude/prompt-engineering/overview) · [DAIR.AI Prompt Engineering Guide](https://www.promptingguide.ai/)
 
 ---
 
-### Structured output
+### 3. Structured Output
 
-**Objective:** Produce machine-readable output and enforce it at the boundary.
+Get the model to return validated JSON every time. Map a query to a `{ title, summary, tags[] }` shape, validate with Zod or Pydantic, and implement one retry that feeds the validation error back to the model.
 
-- **Concepts:** JSON responses from the API; schema validation (TypeScript: Zod · Python: Pydantic); retry-on-failure (re-send with the validation error appended so the model can self-correct)
-- **Practice:** Map a user query to a strict `{ title, summary, tags[] }` shape; validate every response before use. Deliberately trigger a schema failure and implement one retry that includes the error message in context.
-- **Success criteria:** No silent schema failures; unvalidated strings are not trusted downstream; the system recovers from at least one class of malformed output.
-
-**References:** [OpenAI structured outputs](https://platform.openai.com/docs/guides/structured-outputs) · [Claude structured output](https://docs.anthropic.com/en/docs/build-with-claude/structured-output) · [Instructor](https://python.useinstructor.com) (Python library that wraps validation + retry logic around any LLM — good reference implementation)
+[OpenAI structured outputs](https://platform.openai.com/docs/guides/structured-outputs) · [Claude structured output](https://docs.anthropic.com/en/docs/test-and-evaluate/strengthen-guardrails/increase-consistency) · [Instructor](https://python.useinstructor.com/)
 
 ---
 
-### Embeddings, storage, and search
+### 4. Embeddings, Storage, and Search
 
-**Objective:** End-to-end semantic retrieval: embed, persist, query.
+Embed sentences, store them in a vector database, and query by meaning. Implement `search(query)` over a small indexed corpus — results should rank by semantic similarity, not keyword overlap.
 
-- **Concepts:** embeddings, cosine similarity; vector storage (e.g. pgvector, Pinecone); metadata alongside vectors; embedding model choice matters (e.g. `text-embedding-3-small` vs `text-embedding-3-large` — smaller is often sufficient and cheaper)
-- **Practice:** Embed several sentences; compare similar vs unrelated pairs. Persist vectors and implement `search(query)` returning top matches over a small indexed corpus (on the order of tens of chunks or documents).
-- **Success criteria:** Meaning-based ranking, not keyword overlap alone. Weak results usually trace to data, chunking, or embedding choice.
-
-**References:** [OpenAI embeddings](https://platform.openai.com/docs/guides/embeddings) · [pgvector](https://github.com/pgvector/pgvector) · [Pinecone](https://docs.pinecone.io) · [The Illustrated Word2Vec](https://jalammar.github.io/illustrated-word2vec/) (Jay Alammar — builds the intuition for what embeddings represent before touching the API)
+[OpenAI embeddings](https://platform.openai.com/docs/guides/embeddings) · [pgvector](https://github.com/pgvector/pgvector) · [Pinecone](https://docs.pinecone.io/) · [The Illustrated Word2Vec](https://jalammar.github.io/illustrated-word2vec/)
 
 ---
 
-### Retrieval-augmented generation (RAG) and retrieval tuning
+### 5. RAG and Retrieval Tuning
 
-**Objective:** Ground generation in retrieved context and improve retrieval quality.
+Build the full retrieve → filter → generate pipeline. Experiment with chunk size, top-k, and query rewriting. Answers should be attributable to retrieved material — if they're not, the problem is usually chunking or embedding choice, not the model.
 
-- **Concepts:** RAG pipeline (retrieve → filter → generate); chunking strategy (size, overlap); query rewriting (restate the user query to better match indexed text); retrieve-then-select (retrieve more candidates than needed, then filter to the most relevant before passing to the model)
-- **Practice:** Feed retrieved chunks to the model for answering. Iterate on chunk size, top-k, and how much context is passed; validate with a representative set of questions.
-- **Success criteria:** Answers attributable to retrieved material; bloated or irrelevant context degrades quality.
-
-**References:** [Pinecone semantic search](https://docs.pinecone.io/guides/search/semantic-search) · [LlamaIndex RAG guide](https://docs.llamaindex.ai/en/stable/understanding/rag/) · [Anthropic contextual retrieval](https://www.anthropic.com/news/contextual-retrieval) (technique for improving chunk relevance at index time)
+[Pinecone semantic search](https://www.pinecone.io/learn/series/nlp/semantic-search/) · [LlamaIndex RAG guide](https://docs.llamaindex.ai/en/stable/) · [Anthropic contextual retrieval](https://www.anthropic.com/news/contextual-retrieval)
 
 ---
 
 ## Part II — Systems
 
-### Tool calling
+### 6. Tool Calling
 
-**Objective:** Let the model select and invoke first-party tools with validated arguments.
+Let the model pick and invoke tools. Build at least three: a calculator, a live HTTP call (e.g. [Open-Meteo](https://open-meteo.com), no key needed), and a text formatter. The model must route correctly and handle a tool error gracefully.
 
-- **Concepts:** function calling flow (decide → call → return); argument validation; parallel tool calls (model may invoke multiple tools in one turn)
-- **Practice:** Implement at least three tools — a calculator, a live HTTP call (e.g. [Open-Meteo](https://open-meteo.com) weather API, no key required), and a text formatter. The model must choose the correct tool, supply valid arguments, and produce a final answer. Add a case where the tool returns an error and verify the model handles it gracefully.
-- **Success criteria:** Correct tool routing for unambiguous queries; tool errors surface as informative responses, not crashes; failures drive prompt and schema refinement.
-
-**References:** [Function calling](https://platform.openai.com/docs/guides/function-calling) · [Claude tool use](https://docs.anthropic.com/en/docs/build-with-claude/tool-use)
+[OpenAI function calling](https://platform.openai.com/docs/guides/function-calling) · [Claude tool use](https://docs.anthropic.com/en/docs/build-with-claude/tool-use)
 
 ---
 
-### Model Context Protocol (MCP)
+### 7. Model Context Protocol (MCP)
 
-**Objective:** Expose tools through a standard client–server model for reusable integrations.
+Connect to an existing MCP server (filesystem or GitHub) and exercise a tool through a supported client. Same mental model as tool calling — just with a proper client–server boundary.
 
-- **Concepts:** MCP vs ad hoc in-process tools; when server-based tools justify the operational cost
-- **Practice:** Connect to an existing MCP server (e.g. filesystem, GitHub); exercise at least one tool through a supported client.
-- **Success criteria:** The same conceptual model as tool calling, with clear separation between host and tool implementations.
-
-**References:** [MCP](https://modelcontextprotocol.io) · [Claude MCP](https://docs.anthropic.com/en/docs/build-with-claude/mcp)
+[MCP docs](https://modelcontextprotocol.io/) · [Claude MCP](https://docs.anthropic.com/en/docs/build-with-claude/mcp)
 
 ---
 
-### Agents: loops and operational control
+### 8. Agents
 
-**Objective:** Multi-step workflows with explicit limits and failure handling.
+Build a multi-step loop: goal → step → optional tool or retrieval → observation → repeat. Enforce a step cap and handle failures — most reliability issues come from poor control flow, not model size.
 
-- **Concepts:** iterative reasoning and action (e.g. ReAct-style patterns); maximum steps; error handling; termination conditions
-- **Practice:** Build a loop: goal → step → optional tool or retrieval → observation → repeat. Enforce step caps, fallbacks, and tests for invalid inputs and tool errors.
-- **Success criteria:** The system completes or stops safely; reliability issues are most often control and instrumentation, not model size alone.
-
-**References:** [Anthropic agent overview](https://docs.anthropic.com/en/docs/build-with-claude/agent-overview) · [LLM Powered Autonomous Agents](https://lilianweng.github.io/posts/2023-06-23-agent/) (Lilian Weng — the definitive survey of agent patterns: memory, planning, tool use) · [ReAct paper](https://arxiv.org/abs/2210.03629) (the reasoning + acting pattern most agent loops are based on)
+[Anthropic agent overview](https://docs.anthropic.com/en/docs/build-with-claude/agents) · [LLM Powered Autonomous Agents](https://lilianweng.github.io/posts/2023-06-23-agent/) · [ReAct paper](https://arxiv.org/abs/2210.03629)
 
 ---
 
-### Memory
+### 9. Memory
 
-**Objective:** Retain useful context across turns without passing full transcripts.
+Persist exchanges and retrieve relevant ones on each new turn. Inject them into context above the retrieved chunks. Unbounded history increases noise — retrieval should be selective.
 
-- **Concepts:** short-term vs long-term memory; vector-backed recall of prior turns
-- **Practice:** Persist exchanges; on new input, retrieve relevant prior segments and inject into context (reusing the embedding and storage patterns from Part I).
-- **Success criteria:** Coherent multi-turn behavior; retrieval is selective—unbounded history increases noise.
-
-**References:** [Anthropic memory patterns](https://docs.anthropic.com/en/docs/build-with-claude/memory) · [pgvector](https://github.com/pgvector/pgvector) · [Pinecone](https://docs.pinecone.io)
+[Anthropic memory patterns](https://docs.anthropic.com/en/docs/build-with-claude/memory) · [pgvector](https://github.com/pgvector/pgvector) · [Pinecone](https://docs.pinecone.io/)
 
 ---
 
-### Evaluation and system integration
+### 10. Evaluation and Integration
 
-**Objective:** Quantify behavior and assemble one production-shaped pipeline.
+Build a golden set of 10–20 queries. Score an early RAG baseline with manual review and an LLM-as-judge. Re-score the full stack and track changes in a table — regressions should be visible.
 
-**Evaluation**
+Then wire everything into one path: query rewriting → retrieval → agent loop → tools → memory → validated structured output → response. One happy path plus two error cases is enough.
 
-- **Concepts:** relevance and correctness; limits of informal review; LLM-as-judge (use a model to score outputs against a rubric — fast but requires calibration); golden datasets (a fixed set of inputs with known-good outputs used for regression testing)
-- **Practice:** Build a golden set of 10–20 test queries with expected properties. Score an early RAG baseline with both manual review and an LLM judge. Then re-score the full stack (memory + tools included) and compare. Track scores in a simple table so regressions are visible.
-- **Success criteria:** Regressions and weak spots are visible and repeatable; the LLM judge's scores correlate with your manual judgements before you trust it.
-
-**Integration**
-
-- **Concepts:** composing independently built components into a single request path; failure propagation across layers; logging and observability at each stage
-- **Practice:** Wire one end-to-end path covering every layer built so far:
-  ```
-  user input
-    → agent loop (goal decomposition, step cap)
-    → retrieval (embeddings + vector store)
-    → tool calls (including MCP server if integrated)
-    → structured output validation
-    → response to user
-  ```
-  A minimal but complete example: a research assistant that takes a question, retrieves relevant chunks from an indexed corpus, optionally calls a live tool (e.g. web search or calculator), and returns a cited, schema-validated answer. Keep scope narrow — one happy path plus two error cases is enough.
-- **Success criteria:** A single demonstrable system, not only isolated exercises. Each layer is independently testable; the full path runs without manual intervention.
-
-**References:** [OpenAI Evals](https://platform.openai.com/docs/guides/evals) · [RAGAS](https://docs.ragas.io) · [LangSmith](https://docs.smith.langchain.com) · [Anthropic evaluation guide](https://docs.anthropic.com/en/docs/build-with-claude/evals)
+[OpenAI Evals](https://github.com/openai/evals) · [RAGAS](https://docs.ragas.io/) · [LangSmith](https://docs.smith.langchain.com/) · [Anthropic eval guide](https://docs.anthropic.com/en/docs/test-and-evaluate/eval-overview)
 
 ---
 
+## Study Path
 
-## Courses & Resources
+Each phase draws from the best parts of the most focused course for that topic — no single course covers everything well.
 
+```
+Phase 1 — Foundations (Modules 1–3)
+  Karpathy Zero to Hero          Videos 1–4 (tokenization through attention)
+  Anthropic Prompt Engineering   All 9 chapters — best single resource for prompting
 
-| Module | Resource |
-|---|---|
-| Token mechanics | [Neural Networks: Zero to Hero](https://karpathy.ai/zero-to-hero.html) — Karpathy builds a GPT from scratch; the deepest possible intuition |
-| Prompting | [Anthropic Prompt Engineering Tutorial](https://github.com/anthropics/prompt-eng-interactive-tutorial) — 9-chapter Jupyter course, hands-on |
-| Structured output | [Instructor](https://python.useinstructor.com) — Python library; read the docs as a reference implementation |
-| Embeddings | [Vector Databases: from Embeddings to Applications](https://www.deeplearning.ai/short-courses/vector-databases-embeddings-applications/) — DeepLearning.AI |
-| RAG | [Building & Evaluating Advanced RAG](https://www.deeplearning.ai/short-courses/building-evaluating-advanced-rag/) — DeepLearning.AI / LlamaIndex |
-| Tool calling | [OpenAI Cookbook](https://cookbook.openai.com) — runnable notebooks covering every function-calling pattern |
-| MCP | [MCP with Anthropic](https://www.deeplearning.ai/short-courses/mcp-build-rich-context-ai-apps-with-anthropic/) — DeepLearning.AI / Anthropic |
-| Agents | [AI Agents in LangGraph](https://www.deeplearning.ai/short-courses/ai-agents-in-langgraph/) — builds a ReAct agent from scratch |
-| Memory | [Long-Term Agentic Memory with LangGraph](https://www.deeplearning.ai/short-courses/long-term-agentic-memory-with-langgraph/) — DeepLearning.AI |
-| Evaluation | [Intro to LangSmith](https://academy.langchain.com/courses/intro-to-langsmith) — tracing, LLM-as-judge, eval runs |
+Phase 2 — Retrieval (Modules 4–5)
+  DeepLearning.AI Vector DBs     Full course — covers Module 4 end-to-end
+  DeepLearning.AI Advanced RAG   Full course — focus on chunking and eval patterns
+                                 Skip the LlamaIndex-specific abstractions
 
-**Certification:** [Anthropic Claude Academy](https://anthropic.skilljar.com)
+Phase 3 — Systems (Modules 6–9)
+  AI Agents in LangGraph         Full course — covers tool calling, agents, and memory together
+                                 No need to also do the standalone memory course (heavy overlap)
+  MCP with Anthropic             Full course — do this after the agents course
+
+Phase 4 — Evaluation (Module 10)
+  Intro to LangSmith             Full course — pair with RAGAS docs for scoring patterns
+```
+
+**Certification:** [Anthropic Claude Academy](https://academy.anthropic.com/)
 
 ---
+
+## Capstone: Research Oracle
+
+Build a multi-turn agent that answers questions about a document corpus, pulls in live data when needed, cites every claim, and evaluates its own outputs. Build it incrementally — by Module 10 all layers should be live.
+
+### System
+
+```
+User question
+  │
+  ├─ Query rewriting      Restate the question to improve retrieval recall
+  │
+  ├─ Retrieval            Embed → search corpus → return top-k chunks
+  │                       Index at least 20–30 documents
+  │
+  ├─ Agent loop           Max 5 steps. Tools available:
+  │                         web_search(query)
+  │                         calculator(expression)
+  │                         summarise_doc(url)
+  │                       Cite which tool produced which context
+  │
+  ├─ Memory               Retrieve 3 most relevant prior exchanges for the session
+  │                       Inject above chunks, below system prompt
+  │                       Persist the new exchange after responding
+  │
+  ├─ Structured output    Validate every response against:
+  │                         { answer, citations[], confidence, follow_up_questions[] }
+  │                       Retry once on schema failure
+  │
+  └─ Response to user
+```
+
+### Evaluation
+
+Build a golden set of 15 questions across three tiers:
+- **Tier 1** — answerable from the corpus, no tools needed (5 questions)
+- **Tier 2** — require a tool call (5 questions)
+- **Tier 3** — multi-hop: retrieval + tool + memory from a prior turn (5 questions)
+
+Score each iteration: manual pass/fail on accuracy, LLM-as-judge on citation quality (0–2), and schema first-pass validity rate. Track in a CSV — a regression in Tier 1 while improving Tier 3 is signal.
+
+Minimum bar: Tier 1 ≥ 4/5 · Tier 2 ≥ 3/5 · Tier 3 ≥ 2/5 · Schema validity ≥ 85%
+
+### Stretch
+
+- Expose corpus search as an MCP server consumed by the agent
+- Instrument every layer with LangSmith — per-layer latency and failure rate
+- Add a critic agent that reviews the draft before it's returned
+
+---
+
+## Production References
+
+Real systems and frameworks worth studying once the capstone is done.
+
+| System | What to look for |
+|--------|-----------------|
+| [Anthropic — Building Effective Agents](https://www.anthropic.com/research/building-effective-agents) | Orchestrator–subagent patterns, task decomposition, handoffs |
+| [LinkedIn RAG at Scale](https://engineering.linkedin.com/blog/2023/retrieval-augmented-generation-with-linkedin-data) | Hybrid dense + sparse search, retrieval monitoring in production |
+| [Uber LLM Gateway](https://www.uber.com/en-US/blog/from-predictive-to-generative-ai/) | Model routing, rate limiting, cost attribution across providers |
+| [Replit AI Agent](https://blog.replit.com/ai) | Long-horizon agent with persistent state and sandboxed tool execution |
+| [Lilian Weng — LLM Powered Autonomous Agents](https://lilianweng.github.io/posts/2023-06-23-agent/) | Comprehensive survey of agent patterns: planning, memory, tool use |
+
+| Framework | What to study |
+|-----------|--------------|
+| [LangGraph](https://langchain-ai.github.io/langgraph/) | Stateful graph-based orchestration — best for understanding agent state flow |
+| [AutoGen](https://microsoft.github.io/autogen/) | Multi-agent conversations: planner, executor, and critic cooperating |
+| [CrewAI](https://docs.crewai.com/) | Role-based agent teams with explicit task delegation |
+| [Anthropic Agent Patterns](https://docs.anthropic.com/en/docs/build-with-claude/agents) | Orchestrator–worker, parallelisation, and routing without framework lock-in |
+
+---
+
+*Maintained by [yuvrxj-afk](https://github.com/yuvrxj-afk).*
