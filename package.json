@@ -4,7 +4,11 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "rag:run": "tsx src/apps/rag-cli/run.ts",
+    "rag:eval": "tsx src/apps/rag-cli/eval.ts",
+    "typecheck": "tsc --noEmit",
+    "test": "tsx --test src/features/rag/ingestion/*.test.ts src/features/rag/retrieval/*.test.ts",
+    "check": "npm run typecheck && npm test && npm run rag:eval"
   },
   "keywords": [],
   "author": "",
@@ -12,6 +16,8 @@
   "dependencies": {
     "@anthropic-ai/sdk": "^0.82.0",
     "dotenv": "^17.4.0",
+    "gpt-tokenizer": "^3.4.0",
+    "mathjs": "^15.2.0",
     "openai": "^6.33.0",
     "tsx": "^4.21.0",
     "typescript": "^6.0.2",
