@@ -6,6 +6,7 @@
   "scripts": {
     "rag:run": "tsx src/apps/rag-cli/run.ts",
     "rag:eval": "tsx src/apps/rag-cli/eval.ts",
+    "pipeline:run": "tsx src/apps/pipeline-cli/run.ts",
     "typecheck": "tsc --noEmit",
     "test": "tsx --test src/features/rag/ingestion/*.test.ts src/features/rag/retrieval/*.test.ts",
     "check": "npm run typecheck && npm test && npm run rag:eval"
