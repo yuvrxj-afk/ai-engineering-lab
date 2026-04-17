@@ -1,6 +1,7 @@
 import OpenAI from "openai";
 import { z } from "zod";
 import { RetrievalResult } from "./retriever";
+import { withRetry } from "../shared/retry";
 
 const openai = new OpenAI();
 
@@ -69,26 +70,28 @@ export async function rerank(
         .map((r, i) => `[${i}] chunk_id="${r.chunk.id}"\n${r.text}`)
         .join("\n\n");
 
-    const res = await openai.chat.completions.create({
-        model: "gpt-4.1-mini",
-        max_tokens: 200,
-        temperature: 0,
-        messages: [
-            {
-                role: "system",
-                content:
-                    "You are a relevance judge. " +
-                    "Given a query and candidate text chunks, " +
-                    "return ONLY a JSON array of chunk_id values that answer the query. " +
-                    "Most relevant first. Exclude chunks that do not answer the query. " +
-                    "Return chunk_id values exactly as quoted. No extra text.",
-            },
-            {
-                role: "user",
-                content: `Query: ${query}\n\nCandidates:\n${candidateList}`,
-            },
-        ],
-    })
+    const res = await withRetry(() =>
+        openai.chat.completions.create({
+            model: "gpt-4.1-mini",
+            max_tokens: 200,
+            temperature: 0,
+            messages: [
+                {
+                    role: "system",
+                    content:
+                        "You are a relevance judge. " +
+                        "Given a query and candidate text chunks, " +
+                        "return ONLY a JSON array of chunk_id values that answer the query. " +
+                        "Most relevant first. Exclude chunks that do not answer the query. " +
+                        "Return chunk_id values exactly as quoted. No extra text.",
+                },
+                {
+                    role: "user",
+                    content: `Query: ${query}\n\nCandidates:\n${candidateList}`,
+                },
+            ],
+        }),
+    )
 
     const raw = res.choices[0]?.message.content?.trim() ?? "[]"
 

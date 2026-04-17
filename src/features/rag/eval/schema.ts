@@ -17,5 +17,10 @@ export const CorpusDocSchema = z.object({
     text: z.string().min(1),
 });
 
+export const GroundednessJudgementSchema = z.object({
+    grounded: z.boolean(),
+    ungrounded_claims: z.array(z.string()),
+});
+
 export const GoldenSetSchema = z.array(GoldenQuerySchema);
 export const CorpusSchema = z.array(CorpusDocSchema);
