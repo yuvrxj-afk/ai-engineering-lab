@@ -16,5 +16,11 @@
     "createdAt": "2026-04-16T12:30:35.935Z",
     "task": "Research Ethereum and write a short report.",
     "report": "Ethereum is a decentralized, general-purpose blockchain platform designed to enable the development and operation of smart contracts and decentralized applications (dApps). It features the Ethereum Virtual Machine (EVM), which allows code execution directly on the blockchain through contract accounts, alongside traditional externally-owned accounts (EOAs).\n\nConsensus on Ethereum is achieved via a Proof of Stake (PoS) mechanism. Validators stake ETH to participate in proposing and attesting blocks. Network finality is ensured through checkpoint epochs requiring a supermajority agreement among validators.\n\nA significant protocol upgrade, EIP-1559, introduced a transaction fee model that includes a base fee burned by the protocol, which dynamically adjusts according to network demand. Users can add an optional priority fee (tip) to incentivize validators. This change improves fee predictability and reduces some miner extractable value (MEV) related issues, although it does not fully eliminate them.\n\nIn summary, Ethereum combines programmable blockchain functionality with an efficient and secure consensus model and an improved transaction fee market mechanism."
+  },
+  {
+    "id": "1776426496454",
+    "createdAt": "2026-04-17T11:48:16.454Z",
+    "task": "what are the costs of sending a transaction?",
+    "report": "The cost of sending a transaction on Ethereum is paid through gas fees, which compensate validators for processing the transactions."
   }
 ]
