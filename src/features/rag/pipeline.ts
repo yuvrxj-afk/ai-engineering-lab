@@ -71,16 +71,20 @@ export interface PipelineResult {
     results: RetrievalResult[];
     answer: string;
 }
+const openai = new OpenAI();
+const store = new VectorStore();
+const ingester = new DocumentIngester(store);
 
-export async function runPipeline(query: string): Promise<PipelineResult> {
+export async function runRAG(query: string) {
+    await ingester.ingestAll(CORPUS);
+    return runPipeline(query)
+}
+
+async function runPipeline(query: string): Promise<PipelineResult> {
     // Step 3 (before step 1): load memory
     const memories = loadMemories();
 
     // Step 1: RAG retrieval → chunks back
-    const openai = new OpenAI();
-    const store = new VectorStore();
-    const ingester = new DocumentIngester(store);
-    await ingester.ingestAll(CORPUS);
 
     const rewrittenQuery = await rewriteQuery(query, openai);
     const results = await retrieve(rewrittenQuery, store);
@@ -126,3 +130,4 @@ export async function runPipeline(query: string): Promise<PipelineResult> {
 
     return { query, rewrittenQuery, results, answer };
 }
+

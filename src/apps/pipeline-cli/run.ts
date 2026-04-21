@@ -1,5 +1,5 @@
 import "../../features/rag/shared/env";
-import { runPipeline } from "../../features/rag/pipeline";
+import { runRAG } from "../../features/rag/pipeline";
 
 async function main(): Promise<void> {
     const query = process.argv.slice(2).join(" ").trim();
@@ -9,7 +9,7 @@ async function main(): Promise<void> {
         return;
     }
 
-    const { rewrittenQuery, results, answer } = await runPipeline(query);
+    const { rewrittenQuery, results, answer } = await runRAG(query);
 
     console.log(`Query: ${query}`);
     if (rewrittenQuery !== query) {
@@ -21,7 +21,7 @@ async function main(): Promise<void> {
         const heading = r.chunk.heading ? `[${r.chunk.heading}] ` : "";
         console.log(
             `  hybrid=${r.score.toFixed(3)} sem=${r.semanticScore.toFixed(3)} kw=${r.keywordScore.toFixed(3)} ` +
-                `${heading}${r.text}`,
+            `${heading}${r.text}`,
         );
     }
 
