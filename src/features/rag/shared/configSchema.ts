@@ -7,6 +7,11 @@ import { z } from "zod";
 
 export const EnvSchema = z.object({
     OPENAI_API_KEY: z.string().min(1, "OPENAI_API_KEY is required"),
+    // Vector store / DB
+    RAG_VECTOR_BACKEND: z.enum(["memory", "pgvector"]).default("memory"),
+    DATABASE_URL: z.string().min(1).optional(),
+    // text-embedding-3-small is 1536-dim today; keep configurable for experiments.
+    RAG_EMBED_DIM: z.coerce.number().int().positive().default(1536),
     RAG_MIN_P3: z.coerce.number().min(0).max(1).default(0.5),
     RAG_MIN_R3: z.coerce.number().min(0).max(1).default(0.5),
 });

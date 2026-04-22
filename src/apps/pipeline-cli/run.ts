@@ -1,5 +1,5 @@
 import "../../features/rag/shared/env";
-import { runRAG } from "../../features/rag/pipeline";
+import { runPipeline } from "../../features/rag/pipeline";
 
 async function main(): Promise<void> {
     const query = process.argv.slice(2).join(" ").trim();
@@ -9,7 +9,7 @@ async function main(): Promise<void> {
         return;
     }
 
-    const { rewrittenQuery, results, answer } = await runRAG(query);
+    const { rewrittenQuery, results, answer } = await runPipeline(query);
 
     console.log(`Query: ${query}`);
     if (rewrittenQuery !== query) {

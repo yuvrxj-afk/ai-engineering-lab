@@ -26,17 +26,18 @@ export class DocumentIngester {
         };
 
         const chunks = this.chunker.chunk(cleaned, chunkOptions);
-        this.store.deleteByDocId(doc.id);
+        await this.store.deleteByDocId(doc.id);
 
         for (let i = 0; i < chunks.length; i += BATCH_SIZE) {
             const batch = chunks.slice(i, i + BATCH_SIZE);
             const texts = batch.map((c) => c.embeddingText);
             const vectors = await embedBatch(texts);
 
-            batch.forEach((chunk, j) => {
-                const finalChunk: Chunk = { ...chunk, vector: vectors[j] ?? [] };
-                this.store.add(finalChunk);
-            });
+            const finalChunks: Chunk[] = batch.map((chunk, j) => ({
+                ...chunk,
+                vector: vectors[j] ?? [],
+            }));
+            await this.store.addMany(finalChunks);
         }
     }
 
@@ -47,7 +48,7 @@ export class DocumentIngester {
         for (const doc of docs) {
             await this.ingest(doc, opts);
         }
-        console.log(`Ingested ${this.store.size()} chunks from ${docs.length} documents`);
+        console.log(`Ingested ${await this.store.size()} chunks from ${docs.length} documents`);
     }
 
     private preprocess(text: string): string {

@@ -6,7 +6,7 @@ import { CORPUS } from "./eval";
 import { DocumentIngester } from "./ingestion";
 import { rewriteQuery } from "./query";
 import type { RetrievalResult } from "./retrieval";
-import { retrieve, VectorStore } from "./retrieval";
+import { createVectorStore, retrieve } from "./retrieval";
 import "./shared/env";
 import { withRetry } from "./shared/retry";
 
@@ -71,20 +71,24 @@ export interface PipelineResult {
     results: RetrievalResult[];
     answer: string;
 }
+
 const openai = new OpenAI();
-const store = new VectorStore();
-const ingester = new DocumentIngester(store);
 
-export async function runRAG(query: string) {
+// Standard Node.js pattern for async module initialization:
+// create a Promise once at module load, and await it from exported functions.
+const storeReady = (async () => {
+    const store = await createVectorStore();
+    const ingester = new DocumentIngester(store);
     await ingester.ingestAll(CORPUS);
-    return runPipeline(query)
-}
+    return store;
+})();
 
-async function runPipeline(query: string): Promise<PipelineResult> {
+export async function runPipeline(query: string): Promise<PipelineResult> {
     // Step 3 (before step 1): load memory
     const memories = loadMemories();
 
     // Step 1: RAG retrieval → chunks back
+    const store = await storeReady;
 
     const rewrittenQuery = await rewriteQuery(query, openai);
     const results = await retrieve(rewrittenQuery, store);

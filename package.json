@@ -9,7 +9,9 @@
     "pipeline:run": "tsx src/apps/pipeline-cli/run.ts",
     "typecheck": "tsc --noEmit",
     "test": "tsx --test src/features/rag/ingestion/*.test.ts src/features/rag/retrieval/*.test.ts",
-    "check": "npm run typecheck && npm test && npm run rag:eval"
+    "check": "npm run typecheck && npm test && npm run rag:eval",
+    "db:up": "docker compose up -d",
+    "db:down": "docker compose down"
   },
   "keywords": [],
   "author": "",
@@ -21,11 +23,13 @@
     "gpt-tokenizer": "^3.4.0",
     "mathjs": "^15.2.0",
     "openai": "^6.33.0",
+    "pg": "^8.20.0",
     "tsx": "^4.21.0",
     "typescript": "^6.0.2",
     "zod": "^4.3.6"
   },
   "devDependencies": {
-    "@types/node": "^25.5.1"
+    "@types/node": "^25.5.1",
+    "@types/pg": "^8.20.0"
   }
 }

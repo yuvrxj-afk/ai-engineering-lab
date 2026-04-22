@@ -1,7 +1,7 @@
 import type { Chunk } from "../shared/types/chunk";
 import { embed } from "../shared/embeddingClient";
 import { rerank } from "./reranker";
-import { VectorStore } from "./vectorStore";
+import type { VectorStore } from "./vectorStore";
 
 const STOPWORDS = new Set([
     "the", "is", "in", "on", "at", "of", "a", "an", "and", "to", "for",
@@ -62,7 +62,7 @@ export async function retrieve(
 ): Promise<RetrievalResult[]> {
     const cfg = { ...DEFAULT_CONFIG, ...config };
     const queryVector = await embed(query);
-    const candidates = store.search(queryVector, cfg.candidateK);
+    const candidates = await store.search(queryVector, cfg.candidateK);
 
     const scored = candidates
         .map(({ chunk, score: semanticScore }) => {

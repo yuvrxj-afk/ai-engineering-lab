@@ -5,7 +5,7 @@ import { GroundednessJudgementSchema } from "../../features/rag/eval/schema";
 import { generateAnswer } from "../../features/rag/generation";
 import { DocumentIngester } from "../../features/rag/ingestion";
 import { rewriteQuery } from "../../features/rag/query";
-import { retrieve, VectorStore } from "../../features/rag/retrieval";
+import { createVectorStore, retrieve } from "../../features/rag/retrieval";
 import { withRetry } from "../../features/rag/shared/retry";
 import { z } from "zod";
 function precisionAtK(results: string[], relevant: Set<string>, k: number): number {
@@ -68,58 +68,62 @@ async function judgeGroundedness(
 async function runEval(): Promise<void> {
     const openai = new OpenAI();
     const judgeClient = new OpenAI();
-    const store = new VectorStore();
+    const store = await createVectorStore();
     const ingester = new DocumentIngester(store);
-    await ingester.ingestAll(CORPUS);
+    try {
+        await ingester.ingestAll(CORPUS);
 
-    let sumP3 = 0;
-    let sumR3 = 0;
-    let groundedCount = 0;
+        let sumP3 = 0;
+        let sumR3 = 0;
+        let groundedCount = 0;
 
-    for (const testCase of GOLDEN_SET) {
-        const rewritten = await rewriteQuery(testCase.query, openai);
-        const results = await retrieve(rewritten, store, { topK: 3 });
-        const answer = await generateAnswer(testCase.query, results);
-        const chunks = results.map((r) => r.text);
-        const groundedness = await judgeGroundedness(chunks, answer, judgeClient);
-        const retrievedDocIds = results.map((r) => r.chunk.docId);
-        const relevant = new Set(testCase.relevantDocIds);
+        for (const testCase of GOLDEN_SET) {
+            const rewritten = await rewriteQuery(testCase.query, openai);
+            const results = await retrieve(rewritten, store, { topK: 3 });
+            const answer = await generateAnswer(testCase.query, results);
+            const chunks = results.map((r) => r.text);
+            const groundedness = await judgeGroundedness(chunks, answer, judgeClient);
+            const retrievedDocIds = results.map((r) => r.chunk.docId);
+            const relevant = new Set(testCase.relevantDocIds);
 
-        const p3 = precisionAtK(retrievedDocIds, relevant, 3);
-        const r3 = recallAtK(retrievedDocIds, relevant, 3);
-        sumP3 += p3;
-        sumR3 += r3;
-        if (groundedness.grounded) groundedCount += 1;
+            const p3 = precisionAtK(retrievedDocIds, relevant, 3);
+            const r3 = recallAtK(retrievedDocIds, relevant, 3);
+            sumP3 += p3;
+            sumR3 += r3;
+            if (groundedness.grounded) groundedCount += 1;
 
-        console.log(`[${testCase.id}]`);
-        console.log(`  query: ${testCase.query}`);
-        if (rewritten !== testCase.query) console.log(`  rewritten: ${rewritten}`);
-        console.log(`  retrieved: ${retrievedDocIds.join(", ")}`);
-        console.log(`  answer: ${answer}`);
-        console.log(`  P@3=${p3.toFixed(3)}  R@3=${r3.toFixed(3)}`);
-        console.log(`  grounded=${groundedness.grounded}`);
-        if (groundedness.ungrounded_claims.length > 0) {
-            console.log(`  ungrounded_claims: ${groundedness.ungrounded_claims.join(" | ")}`);
+            console.log(`[${testCase.id}]`);
+            console.log(`  query: ${testCase.query}`);
+            if (rewritten !== testCase.query) console.log(`  rewritten: ${rewritten}`);
+            console.log(`  retrieved: ${retrievedDocIds.join(", ")}`);
+            console.log(`  answer: ${answer}`);
+            console.log(`  P@3=${p3.toFixed(3)}  R@3=${r3.toFixed(3)}`);
+            console.log(`  grounded=${groundedness.grounded}`);
+            if (groundedness.ungrounded_claims.length > 0) {
+                console.log(`  ungrounded_claims: ${groundedness.ungrounded_claims.join(" | ")}`);
+            }
         }
-    }
 
-    const n = GOLDEN_SET.length || 1;
-    const avgP3 = sumP3 / n;
-    const avgR3 = sumR3 / n;
-    const groundedRate = groundedCount / n;
-    console.log("\nAggregate:");
-    console.log(`  Avg P@3=${avgP3.toFixed(3)}`);
-    console.log(`  Avg R@3=${avgR3.toFixed(3)}`);
-    console.log(`  Grounded rate=${groundedRate.toFixed(3)}`);
+        const n = GOLDEN_SET.length || 1;
+        const avgP3 = sumP3 / n;
+        const avgR3 = sumR3 / n;
+        const groundedRate = groundedCount / n;
+        console.log("\nAggregate:");
+        console.log(`  Avg P@3=${avgP3.toFixed(3)}`);
+        console.log(`  Avg R@3=${avgR3.toFixed(3)}`);
+        console.log(`  Grounded rate=${groundedRate.toFixed(3)}`);
 
-    const minP3 = thresholdFromEnv("RAG_MIN_P3", 0.2);
-    const minR3 = thresholdFromEnv("RAG_MIN_R3", 0.6);
+        const minP3 = thresholdFromEnv("RAG_MIN_P3", 0.2);
+        const minR3 = thresholdFromEnv("RAG_MIN_R3", 0.6);
 
-    if (avgP3 < minP3 || avgR3 < minR3) {
-        console.error(
-            `Eval failed thresholds: AvgP3=${avgP3.toFixed(3)} (min ${minP3}), AvgR3=${avgR3.toFixed(3)} (min ${minR3})`,
-        );
-        process.exit(1);
+        if (avgP3 < minP3 || avgR3 < minR3) {
+            console.error(
+                `Eval failed thresholds: AvgP3=${avgP3.toFixed(3)} (min ${minP3}), AvgR3=${avgR3.toFixed(3)} (min ${minR3})`,
+            );
+            process.exit(1);
+        }
+    } finally {
+        await store.close?.();
     }
 }
 

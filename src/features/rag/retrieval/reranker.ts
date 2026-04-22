@@ -3,8 +3,6 @@ import { z } from "zod";
 import { RetrievalResult } from "./retriever";
 import { withRetry } from "../shared/retry";
 
-const openai = new OpenAI();
-
 const RankedIdsSchema = z.array(z.string());
 
 export function normalizeChunkId(id: string): string {
@@ -65,6 +63,8 @@ export async function rerank(
     topK: number = 3,
 ): Promise<RetrievalResult[]> {
     if (candidates.length === 0) return [];
+    // Lazily construct client so importing this module doesn't require OPENAI_API_KEY
+    const openai = new OpenAI();
 
     const candidateList = candidates
         .map((r, i) => `[${i}] chunk_id="${r.chunk.id}"\n${r.text}`)
