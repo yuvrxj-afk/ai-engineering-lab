@@ -8,37 +8,30 @@ theme:
   name: material
   custom_dir: docs/overrides
   palette:
-    - scheme: slate
-      toggle:
-        icon: material/weather-sunny
-        name: Switch to light mode
     - scheme: default
       toggle:
         icon: material/weather-night
         name: Switch to dark mode
+    - scheme: slate
+      toggle:
+        icon: material/weather-sunny
+        name: Switch to light mode
   font:
     text: Inter
     code: JetBrains Mono
   features:
     - navigation.instant
-    - navigation.instant.progress
-    - navigation.tracking
     - navigation.sections
     - navigation.expand
     - navigation.indexes
     - navigation.top
     - navigation.footer
-    - navigation.tabs
     - search.suggest
     - search.highlight
-    - search.share
     - content.code.copy
-    - content.code.annotate
     - toc.follow
-    - header.autohide
   icon:
     repo: fontawesome/brands/github
-    logo: material/brain
 
 nav:
   - Home: index.md
