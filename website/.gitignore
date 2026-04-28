@@ -1,0 +1,8 @@
+.next/
+out/
+node_modules/
+content/**
+!content/_meta.json
+!content/overrides/
+!content/overrides/.gitkeep
+
