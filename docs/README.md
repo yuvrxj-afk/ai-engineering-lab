@@ -2,8 +2,6 @@
 
 Applied curriculum for building LLM-backed features — APIs, RAG, agents, memory, and evaluation.
 
-18 modules. One capstone. No fluff.
-
 ## Start here
 
 - [Prerequisites](getting-started/prerequisites.md)
