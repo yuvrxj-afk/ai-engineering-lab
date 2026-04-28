@@ -2,7 +2,7 @@
 
 ## Getting Started
 
-* [Overview](getting-started/README.md)
+* [Overview](getting-started/overview.md)
 * [Prerequisites](getting-started/prerequisites.md)
 * [Setup](getting-started/setup.md)
 
