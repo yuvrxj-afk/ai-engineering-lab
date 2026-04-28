@@ -3,19 +3,8 @@ name: Deploy Docs
 on:
   workflow_dispatch:
 
-permissions:
-  contents: write
-
 jobs:
-  deploy:
+  noop:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-
-      - uses: actions/setup-python@v5
-        with:
-          python-version: '3.12'
-
-      - run: pip install mkdocs-material
-
-      - run: mkdocs gh-deploy --force
+      - run: echo "MkDocs removed; using Nextra workflow docs-pages.yml"
