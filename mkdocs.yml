@@ -68,6 +68,10 @@ nav:
   - Capstone: capstone.md
   - References: references.md
 
+exclude_docs: |
+  README.md
+  SUMMARY.md
+
 markdown_extensions:
   - admonition
   - pymdownx.details
