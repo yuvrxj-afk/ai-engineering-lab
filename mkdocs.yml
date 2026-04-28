@@ -6,34 +6,39 @@ repo_name: yuvrxj-afk/ai-engineering-lab
 
 theme:
   name: material
+  custom_dir: docs/overrides
   palette:
     - scheme: slate
-      primary: deep purple
-      accent: amber
       toggle:
-        icon: material/brightness-4
+        icon: material/weather-sunny
         name: Switch to light mode
     - scheme: default
-      primary: deep purple
-      accent: amber
       toggle:
-        icon: material/brightness-7
+        icon: material/weather-night
         name: Switch to dark mode
   font:
     text: Inter
     code: JetBrains Mono
   features:
+    - navigation.instant
+    - navigation.instant.progress
+    - navigation.tracking
     - navigation.sections
     - navigation.expand
     - navigation.indexes
     - navigation.top
     - navigation.footer
+    - navigation.tabs
     - search.suggest
     - search.highlight
+    - search.share
     - content.code.copy
+    - content.code.annotate
     - toc.follow
+    - header.autohide
   icon:
     repo: fontawesome/brands/github
+    logo: material/brain
 
 nav:
   - Home: index.md
@@ -85,13 +90,20 @@ markdown_extensions:
   - attr_list
   - md_in_html
   - tables
+  - def_list
+  - pymdownx.tasklist:
+      custom_checkbox: true
   - toc:
-      permalink: true
+      permalink: "#"
 
 plugins:
   - search
+
+extra_css:
+  - stylesheets/extra.css
 
 extra:
   social:
     - icon: fontawesome/brands/github
       link: https://github.com/yuvrxj-afk/ai-engineering-lab
+  generator: false
