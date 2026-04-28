@@ -22,10 +22,16 @@ for (const entry of await (async () => {
 await cp(srcDocs, dstContent, { recursive: true })
 
 // Ensure we have a root index.mdx for Nextra.
-// GitBook uses docs/index.md — we mirror it as content/index.mdx.
+// We intentionally do NOT mirror MkDocs' landing page, since it contains
+// MkDocs-specific markup (icons/cards) that won't render nicely in Nextra.
+// Instead, use the clean GitBook "Getting Started" overview as the homepage.
 try {
-  const indexMd = await readFile(join(dstContent, 'index.md'), 'utf8')
-  await writeFile(join(dstContent, 'index.mdx'), indexMd)
+  const overviewMd = await readFile(
+    join(dstContent, 'getting-started', 'overview.md'),
+    'utf8'
+  )
+  const homepage = `# Getting Started\n\n${overviewMd.trim()}\n`
+  await writeFile(join(dstContent, 'index.mdx'), homepage)
 } catch {
   // ignore
 }

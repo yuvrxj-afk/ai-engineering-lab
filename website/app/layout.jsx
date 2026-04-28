@@ -7,6 +7,9 @@ export const metadata = {
   title: {
     template: '%s – AI Engineering Lab',
     default: 'AI Engineering Lab'
+  },
+  icons: {
+    icon: [{ url: '/favicon.svg', type: 'image/svg+xml' }]
   }
 }
 
