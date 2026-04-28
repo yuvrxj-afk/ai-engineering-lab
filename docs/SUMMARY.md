@@ -1,9 +1,8 @@
 # Summary
 
-* [Home](README.md)
-
 ## Getting Started
 
+* [Overview](getting-started/README.md)
 * [Prerequisites](getting-started/prerequisites.md)
 * [Setup](getting-started/setup.md)
 
